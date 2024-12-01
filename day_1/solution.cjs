@@ -1,41 +1,26 @@
+const _ = require('lodash/fp');
 const data = require('./data.json');
 
-const sortFn = (a, b) => a - b;
-const firstArraySorted = data.firstArray.toSorted(sortFn);
-const secondArraySorted = data.secondArray.toSorted(sortFn);
+const sortArray = _.sortBy(_.identity);
 
-const calcTotalDistance = (list1, list2) => {
-  return list1.reduce((acc, _, index) => {
-    acc += Math.abs(list1[index] - list2[index]);
-    return acc;
-  }, 0);
-};
+const firstArraySorted = sortArray(data.firstArray);
+const secondArraySorted = sortArray(data.secondArray);
+
+const calcDifference = (a, b) => Math.abs(a - b);
+
+const calcTotalDistance = _.flow(_.zipWith(calcDifference), _.sum);
 
 const answer1 = calcTotalDistance(firstArraySorted, secondArraySorted);
 console.log('Answer1: ', answer1);
 
-const countOccurrences = (arr) =>
-  arr.reduce((acc, num) => {
-    if (acc[num]) {
-      acc[num] += 1;
-    } else {
-      acc[num] = 1;
-    }
-    return acc;
-  }, {});
+const countOccurrences = _.countBy(_.identity);
 
-const calcSimilarityScore = (num, occurencesObj) => {
-  const occurences = occurencesObj[num];
-  return occurences ? occurences * num : 0;
-};
+const calcSimilarityScore = (occurencesObj) => (num) =>
+  num * _.getOr(0, num, occurencesObj);
 
 const calcTotalSimilarityScore = (list1, list2) => {
-  const arr2Occurrences = countOccurrences(list2);
-  const similarityScores = list1.map((num) =>
-    calcSimilarityScore(num, arr2Occurrences)
-  );
-  const sum = similarityScores.reduce((acc, num) => acc + num, 0);
-  return sum;
+  const occurrences = countOccurrences(list2);
+  return _.flow(_.map(calcSimilarityScore(occurrences)), _.sum)(list1);
 };
 
 const answer2 = calcTotalSimilarityScore(data.firstArray, data.secondArray);
