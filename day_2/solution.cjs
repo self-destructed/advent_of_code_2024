@@ -1,9 +1,7 @@
 const _ = require('lodash/fp');
 const data = require('./data.json');
 
-const isOrderAscending = (array) => {
-  return array[0] < array[array.length - 1];
-};
+const isOrderAscending = (array) => _.lt(_.head(array), _.last(array));
 
 const isPairSafe = (prev, next, isAscending, min = 1, max = 3) => {
   const diff = prev - next;
