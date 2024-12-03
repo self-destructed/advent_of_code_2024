@@ -32,3 +32,46 @@ const first = (string) => {
 };
 
 console.log('Answer1: ', first(data));
+
+const REGEXP_PART_2 =
+  /mul\((?<num1>\d{1,3}),(?<num2>\d{1,3})\)|(?<dont>don't\(\))|(?<do>do\(\))/g;
+
+const isDont = (match) => {
+  return match.groups.dont === "don't()";
+};
+
+const isDo = (match) => {
+  return match.groups.do === 'do()';
+};
+
+const filterMatches = (matches) => {
+  const result = matches.reduce(
+    (acc, match) => {
+      if (isDont(match)) {
+        return { ...acc, isEnabled: false };
+      }
+      if (isDo(match)) {
+        return { ...acc, isEnabled: true };
+      }
+
+      if (acc.isEnabled) {
+        const updMatches = [...acc.matches, match];
+        return { ...acc, matches: updMatches };
+      }
+
+      return acc;
+    },
+    {
+      matches: [],
+      isEnabled: true,
+    },
+  );
+  return result.matches;
+};
+
+const second = (string) => {
+  const matches = getMatches(REGEXP_PART_2, string);
+  return calcMatches(filterMatches(matches));
+};
+
+console.log('Answer2: ', second(data));
