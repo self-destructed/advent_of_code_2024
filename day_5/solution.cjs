@@ -86,5 +86,47 @@ const first = (pages, updates) => {
     .reduce((a, b) => a + b, 0);
 };
 
+const swap = (arr, index1, index2) => {
+  const copy = arr;
+  [copy[index1], copy[index2]] = [copy[index2], copy[index1]];
+};
+
+const fixOrder = (updateIndexesMap, update, pageOrder) => {
+  const [firstPageNum, secondPageNum] = pageOrder;
+  // console.log(update);
+  if (
+    updateIndexesMap.has(firstPageNum) &&
+    updateIndexesMap.has(secondPageNum)
+  ) {
+    swap(
+      update,
+      updateIndexesMap.get(firstPageNum),
+      updateIndexesMap.get(secondPageNum),
+    );
+  }
+  // console.log(update, 'a');
+};
+
+const second = (pages, updates) => {
+  const incorrectUpdates = updates.filter((upd) => !isValidUpdate(pages, upd));
+  const fixed = incorrectUpdates.slice();
+
+  fixed.forEach((update) => {
+    const indexesMap = createIndexesMap(update);
+
+    pages.forEach((pageOrder) => {
+      if (!isValidPageOrder(indexesMap, pageOrder)) {
+        fixOrder(indexesMap, update, pageOrder);
+      }
+    });
+  });
+
+  const sum = fixed.map(getMiddleElement).reduce((a, b) => a + b, 0);
+
+  return sum;
+};
+
 // console.log(first(pagesOrderSample, updatesSample));
+console.log(second(pagesOrderSample, updatesSample));
 // console.log(first(data.pages, data.updates));
+console.log(second(data.pages, data.updates));
