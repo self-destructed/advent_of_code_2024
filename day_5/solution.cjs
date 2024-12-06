@@ -1,38 +1,5 @@
 const data = require('./data.json');
 
-const pagesOrderSample = [
-  [47, 53],
-  [97, 13],
-  [97, 61],
-  [97, 47],
-  [75, 29],
-  [61, 13],
-  [75, 53],
-  [29, 13],
-  [97, 29],
-  [53, 29],
-  [61, 53],
-  [97, 53],
-  [61, 29],
-  [47, 13],
-  [75, 47],
-  [97, 75],
-  [47, 61],
-  [75, 61],
-  [47, 29],
-  [75, 13],
-  [53, 13],
-];
-
-const updatesSample = [
-  [75, 47, 61, 53, 29],
-  [97, 61, 53, 29, 13],
-  [75, 29, 13],
-  [75, 97, 47, 61, 53],
-  [61, 13, 29],
-  [97, 13, 75, 29, 47],
-];
-
 const createIndexesMap = (arr) => {
   const map = new Map();
 
@@ -86,47 +53,62 @@ const first = (pages, updates) => {
     .reduce((a, b) => a + b, 0);
 };
 
-const swap = (arr, index1, index2) => {
-  const copy = arr;
-  [copy[index1], copy[index2]] = [copy[index2], copy[index1]];
-};
+console.log('Answer1: ', first(data.pages, data.updates));
 
-const fixOrder = (updateIndexesMap, update, pageOrder) => {
-  const [firstPageNum, secondPageNum] = pageOrder;
-  // console.log(update);
-  if (
-    updateIndexesMap.has(firstPageNum) &&
-    updateIndexesMap.has(secondPageNum)
-  ) {
-    swap(
-      update,
-      updateIndexesMap.get(firstPageNum),
-      updateIndexesMap.get(secondPageNum),
-    );
+const topologicalSort = (pages, update) => {
+  const graph = new Map();
+  const inDegree = new Map();
+
+  // Initialize the graph and in-degree map
+  update.forEach((page) => {
+    graph.set(page, []);
+    inDegree.set(page, 0);
+  });
+
+  // Build the graph and calculate in-degrees for the current update
+  pages.forEach(([firstPage, secondPage]) => {
+    if (update.includes(firstPage) && update.includes(secondPage)) {
+      graph.get(firstPage).push(secondPage);
+      inDegree.set(secondPage, inDegree.get(secondPage) + 1);
+    }
+  });
+
+  // Perform topological sorting using a queue
+  const queue = [];
+  inDegree.forEach((degree, node) => {
+    if (degree === 0) {
+      queue.push(node);
+    }
+  });
+
+  const sorted = [];
+  while (queue.length > 0) {
+    const node = queue.shift();
+    sorted.push(node);
+
+    graph.get(node).forEach((neighbor) => {
+      inDegree.set(neighbor, inDegree.get(neighbor) - 1);
+      if (inDegree.get(neighbor) === 0) {
+        queue.push(neighbor);
+      }
+    });
   }
-  // console.log(update, 'a');
+
+  return sorted;
 };
 
 const second = (pages, updates) => {
   const incorrectUpdates = updates.filter((upd) => !isValidUpdate(pages, upd));
-  const fixed = incorrectUpdates.slice();
 
-  fixed.forEach((update) => {
-    const indexesMap = createIndexesMap(update);
+  // Fix each incorrect update
+  const fixed = incorrectUpdates.map((update) =>
+    topologicalSort(pages, update),
+  );
 
-    pages.forEach((pageOrder) => {
-      if (!isValidPageOrder(indexesMap, pageOrder)) {
-        fixOrder(indexesMap, update, pageOrder);
-      }
-    });
-  });
-
+  // Calculate the sum of middle elements
   const sum = fixed.map(getMiddleElement).reduce((a, b) => a + b, 0);
 
   return sum;
 };
 
-// console.log(first(pagesOrderSample, updatesSample));
-console.log(second(pagesOrderSample, updatesSample));
-// console.log(first(data.pages, data.updates));
-console.log(second(data.pages, data.updates));
+console.log('Answer2: ', second(data.pages, data.updates));
